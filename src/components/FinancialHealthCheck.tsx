@@ -2,21 +2,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Target, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
+import { Activity, Target, TrendingUp, AlertCircle, CheckCircle, Brain } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePersonalization } from "@/hooks/usePersonalization";
+import PersonalizationSetup from "./PersonalizationSetup";
+import PersonalizedAssessment from "./PersonalizedAssessment";
 
 const FinancialHealthCheck = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [showSignUpPrompt, setShowSignUpPrompt] = useState(false);
+  const [showPersonalizationSetup, setShowPersonalizationSetup] = useState(false);
+  const [usePersonalized, setUsePersonalized] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { personalizationData, personalizedContent, calculatePersonalizedHealthScore } = usePersonalization();
 
   const questions = [
     {
@@ -65,7 +71,10 @@ const FinancialHealthCheck = () => {
   const saveHealthAssessment = async (assessmentAnswers: number[]) => {
     if (!user) return;
 
-    const score = Math.round((assessmentAnswers.reduce((sum, score) => sum + score, 0) / (questions.length * 4)) * 100);
+    const score = usePersonalized 
+      ? calculatePersonalizedHealthScore(assessmentAnswers)
+      : Math.round((assessmentAnswers.reduce((sum, score) => sum + score, 0) / (questions.length * 4)) * 100);
+    
     const health = getHealthStatus(score);
 
     try {
@@ -77,7 +86,9 @@ const FinancialHealthCheck = () => {
           health_category: health.status.toLowerCase().replace(' ', '_'),
           assessment_data: {
             answers: assessmentAnswers,
-            questions: questions.map(q => q.question)
+            questions: questions.map(q => q.question),
+            personalized: usePersonalized,
+            userProfile: personalizationData
           },
           recommendations: {
             advice: health.advice,
@@ -93,7 +104,9 @@ const FinancialHealthCheck = () => {
 
       toast({
         title: "Assessment saved!",
-        description: "Your financial health data has been saved to your profile.",
+        description: usePersonalized 
+          ? "Your personalized financial health data has been saved to your profile."
+          : "Your financial health data has been saved to your profile.",
       });
     } catch (error) {
       console.error("Error saving assessment:", error);
@@ -118,7 +131,51 @@ const FinancialHealthCheck = () => {
     setAnswers([]);
     setShowResults(false);
     setShowSignUpPrompt(false);
+    setShowPersonalizationSetup(false);
+    setUsePersonalized(false);
   };
+
+  // Show personalization setup if user wants personalized assessment
+  if (showPersonalizationSetup) {
+    return (
+      <section id="health-check" className="py-16 bg-emerald-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-emerald-900 mb-4">Setup Your Personalized Assessment</h2>
+            <p className="text-emerald-700">
+              Connect your financial data to get a truly personalized financial health assessment
+            </p>
+          </div>
+          <PersonalizationSetup />
+          <div className="text-center mt-6">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowPersonalizationSetup(false)}
+            >
+              Use Standard Assessment Instead
+            </Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show personalized assessment if user has personalization data
+  if (usePersonalized && Object.keys(personalizationData).length > 0) {
+    return (
+      <section id="health-check" className="py-16 bg-emerald-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-emerald-900 mb-4">Your Personalized Financial Health Assessment</h2>
+            <p className="text-emerald-700">
+              Tailored specifically to your financial profile and goals
+            </p>
+          </div>
+          <PersonalizedAssessment />
+        </div>
+      </section>
+    );
+  }
 
   if (showSignUpPrompt) {
     const score = calculateScore();
@@ -209,6 +266,24 @@ const FinancialHealthCheck = () => {
                   <p className="text-emerald-700">{health.advice}</p>
                 </div>
 
+                {user && (
+                  <div className="bg-gold-50 p-4 rounded-lg mb-6 border border-gold-200">
+                    <h4 className="font-semibold text-gold-800 mb-2 flex items-center">
+                      <Brain className="w-5 h-5 mr-2" />
+                      Upgrade to Personalized Assessment
+                    </h4>
+                    <p className="text-gold-700 mb-3">
+                      Get an AI-powered assessment tailored to your actual financial data for more accurate insights and recommendations.
+                    </p>
+                    <Button 
+                      onClick={() => setShowPersonalizationSetup(true)}
+                      className="bg-gold-600 hover:bg-gold-700"
+                    >
+                      Setup Personalized Assessment
+                    </Button>
+                  </div>
+                )}
+
                 <div className="grid md:grid-cols-3 gap-4 mb-6">
                   <Card className="border-emerald-200">
                     <CardContent className="p-4 text-center">
@@ -258,6 +333,28 @@ const FinancialHealthCheck = () => {
             <p className="text-emerald-700">
               Take our quick 2-minute assessment to discover your financial health score and get personalized recommendations
             </p>
+            
+            {user && (
+              <div className="mt-6">
+                <Card className="bg-gradient-to-r from-emerald-50 to-gold-50 border-emerald-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-center space-x-4">
+                      <div className="flex items-center">
+                        <Brain className="w-5 h-5 text-emerald-600 mr-2" />
+                        <span className="text-emerald-800 font-medium">Want a personalized assessment?</span>
+                      </div>
+                      <Button 
+                        onClick={() => setShowPersonalizationSetup(true)}
+                        className="bg-emerald-600 hover:bg-emerald-700"
+                        size="sm"
+                      >
+                        Setup Personalization
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
 
           <Card className="animate-scale-in">
