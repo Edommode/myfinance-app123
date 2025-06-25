@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -217,7 +216,7 @@ const PersonalizedTips = () => {
                     <span className="text-sm text-emerald-600">
                       Relevance: {tip.relevance_score}/10
                     </span>
-                    <Badge variant="outline" size="sm">
+                    <Badge variant="outline">
                       {tip.tip_source || 'Finance Wise'}
                     </Badge>
                   </div>
