@@ -78,26 +78,38 @@ const FinancialHealthCheck = () => {
     const health = getHealthStatus(score);
 
     try {
+      // Convert data to proper JSON format for database
+      const assessmentData = {
+        answers: assessmentAnswers,
+        questions: questions.map(q => q.question),
+        personalized: usePersonalized,
+        userProfile: personalizationData ? {
+          monthlyIncome: personalizationData.monthlyIncome || 0,
+          monthlyExpenses: personalizationData.monthlyExpenses || 0,
+          savings: personalizationData.savings || 0,
+          investments: personalizationData.investments || 0,
+          riskTolerance: personalizationData.riskTolerance || 'moderate',
+          goals: personalizationData.goals || []
+        } : null
+      };
+
+      const recommendations = {
+        advice: health.advice,
+        next_steps: "Get personalized action plan",
+        focus_areas: score < 40 ? ["budgeting", "emergency_fund"] : 
+                    score < 60 ? ["savings", "expense_tracking"] :
+                    score < 80 ? ["investing", "diversification"] :
+                    ["advanced_investing", "wealth_building"]
+      };
+
       const { error } = await supabase
         .from('financial_health_assessments')
         .insert({
           user_id: user.id,
           health_score: score,
           health_category: health.status.toLowerCase().replace(' ', '_'),
-          assessment_data: {
-            answers: assessmentAnswers,
-            questions: questions.map(q => q.question),
-            personalized: usePersonalized,
-            userProfile: personalizationData
-          },
-          recommendations: {
-            advice: health.advice,
-            next_steps: "Get personalized action plan",
-            focus_areas: score < 40 ? ["budgeting", "emergency_fund"] : 
-                        score < 60 ? ["savings", "expense_tracking"] :
-                        score < 80 ? ["investing", "diversification"] :
-                        ["advanced_investing", "wealth_building"]
-          }
+          assessment_data: assessmentData as any,
+          recommendations: recommendations as any
         });
 
       if (error) throw error;
