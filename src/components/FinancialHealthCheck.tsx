@@ -1,15 +1,22 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Activity, Target, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const FinancialHealthCheck = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [showSignUpPrompt, setShowSignUpPrompt] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const questions = [
     {
@@ -47,6 +54,49 @@ const FinancialHealthCheck = () => {
       setCurrentQuestion(currentQuestion + 1);
     } else {
       setShowResults(true);
+      if (!user) {
+        setShowSignUpPrompt(true);
+      } else {
+        saveHealthAssessment(newAnswers);
+      }
+    }
+  };
+
+  const saveHealthAssessment = async (assessmentAnswers: number[]) => {
+    if (!user) return;
+
+    const score = Math.round((assessmentAnswers.reduce((sum, score) => sum + score, 0) / (questions.length * 4)) * 100);
+    const health = getHealthStatus(score);
+
+    try {
+      const { error } = await supabase
+        .from('financial_health_assessments')
+        .insert({
+          user_id: user.id,
+          health_score: score,
+          health_category: health.status.toLowerCase().replace(' ', '_'),
+          assessment_data: {
+            answers: assessmentAnswers,
+            questions: questions.map(q => q.question)
+          },
+          recommendations: {
+            advice: health.advice,
+            next_steps: "Get personalized action plan",
+            focus_areas: score < 40 ? ["budgeting", "emergency_fund"] : 
+                        score < 60 ? ["savings", "expense_tracking"] :
+                        score < 80 ? ["investing", "diversification"] :
+                        ["advanced_investing", "wealth_building"]
+          }
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Assessment saved!",
+        description: "Your financial health data has been saved to your profile.",
+      });
+    } catch (error) {
+      console.error("Error saving assessment:", error);
     }
   };
 
@@ -67,7 +117,65 @@ const FinancialHealthCheck = () => {
     setCurrentQuestion(0);
     setAnswers([]);
     setShowResults(false);
+    setShowSignUpPrompt(false);
   };
+
+  if (showSignUpPrompt) {
+    const score = calculateScore();
+    const health = getHealthStatus(score);
+
+    return (
+      <section id="health-check" className="py-16 bg-emerald-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto text-center">
+            <Card className="border-emerald-200">
+              <CardHeader>
+                <CardTitle className="text-2xl text-emerald-900">
+                  🎉 Your Financial Health Score: {score}/100
+                </CardTitle>
+                <CardDescription className="text-lg">
+                  Status: <Badge className={`bg-${health.color}-100 text-${health.color}-800`}>{health.status}</Badge>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="bg-emerald-50 p-6 rounded-lg">
+                  <h3 className="font-semibold text-emerald-800 mb-3">
+                    🔓 Unlock Your Personalized Financial Action Plan
+                  </h3>
+                  <p className="text-emerald-700 mb-4">
+                    Sign up now to get detailed analysis, personalized investment recommendations, 
+                    daily money tips, and access to our exclusive financial education content.
+                  </p>
+                  <ul className="text-emerald-600 text-sm space-y-2">
+                    <li>✅ Detailed financial health breakdown</li>
+                    <li>✅ Personalized investment strategies based on your score</li>
+                    <li>✅ Daily money tips tailored to your financial level</li>
+                    <li>✅ Access to premium courses and coaching</li>
+                  </ul>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button 
+                    onClick={() => navigate("/auth")}
+                    className="bg-emerald-600 hover:bg-emerald-700 flex-1"
+                  >
+                    Sign Up for Detailed Analysis
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={resetQuiz}
+                    className="flex-1"
+                  >
+                    Retake Assessment
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (showResults) {
     const score = calculateScore();
