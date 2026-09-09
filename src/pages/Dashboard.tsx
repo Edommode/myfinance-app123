@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { BudgetDialog, SavingsGoalDialog, TransactionDialog } from "@/components/DashboardActions";
+import { BudgetDialog, SavingsContributionDialog, SavingsGoalDialog, TransactionDialog } from "@/components/DashboardActions";
 
 type Expense = {
   id: string;
@@ -139,6 +139,7 @@ const Dashboard = () => {
             <span className="text-left"><strong className="block text-lg">MyFinance</strong><span className="text-xs text-slate-500">by Finance Wise</span></span>
           </button>
           <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/transactions")}><ReceiptText className="mr-2 h-4 w-4" />Transactions</Button>
             <span className="hidden text-sm text-slate-600 sm:block">{user?.user_metadata?.full_name || user?.email}</span>
             <Button variant="outline" size="sm" onClick={handleSignOut}><LogOut className="mr-2 h-4 w-4" />Sign out</Button>
           </div>
@@ -193,7 +194,7 @@ const Dashboard = () => {
         </section>
 
         <section className="mt-6">
-          <Card><CardHeader><div className="flex items-center justify-between gap-3"><CardTitle className="flex items-center gap-2"><PiggyBank className="h-5 w-5 text-emerald-700" />Savings goals</CardTitle>{user && <SavingsGoalDialog userId={user.id} onSaved={loadDashboard} />}</div></CardHeader><CardContent className="grid gap-4 md:grid-cols-3">{goals.length === 0 ? <p className="text-sm text-slate-500">No savings goals yet. Create your first goal to start tracking progress.</p> : goals.map((goal) => { const progress = Math.min(100, Math.round(((goal.current_amount ?? 0) / goal.target_amount) * 100)); return <div key={goal.id} className="rounded-xl border p-4"><div className="mb-3 flex items-start justify-between gap-3"><div><p className="font-semibold">{goal.name}</p><p className="text-xs text-slate-500">Target {currency.format(goal.target_amount)}</p></div><span className="text-sm font-bold text-emerald-700">{progress}%</span></div><Progress value={progress} /><p className="mt-3 text-sm text-slate-600">{currency.format(goal.current_amount ?? 0)} saved</p></div>; })}</CardContent></Card>
+          <Card><CardHeader><div className="flex items-center justify-between gap-3"><CardTitle className="flex items-center gap-2"><PiggyBank className="h-5 w-5 text-emerald-700" />Savings goals</CardTitle>{user && <SavingsGoalDialog userId={user.id} onSaved={loadDashboard} />}</div></CardHeader><CardContent className="grid gap-4 md:grid-cols-3">{goals.length === 0 ? <p className="text-sm text-slate-500">No savings goals yet. Create your first goal to start tracking progress.</p> : goals.map((goal) => { const currentAmount = Number(goal.current_amount ?? 0); const progress = Math.min(100, Math.round((currentAmount / goal.target_amount) * 100)); return <div key={goal.id} className="rounded-xl border p-4"><div className="mb-3 flex items-start justify-between gap-3"><div><p className="font-semibold">{goal.name}</p><p className="text-xs text-slate-500">Target {currency.format(goal.target_amount)}</p></div><span className="text-sm font-bold text-emerald-700">{progress}%</span></div><Progress value={progress} /><p className="mt-3 text-sm text-slate-600">{currency.format(currentAmount)} saved</p>{user && <SavingsContributionDialog userId={user.id} goal={{ id: goal.id, name: goal.name, currentAmount, targetAmount: Number(goal.target_amount) }} onSaved={loadDashboard} />}</div>; })}</CardContent></Card>
         </section>
       </main>
     </div>
