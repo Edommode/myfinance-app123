@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowDownRight,
@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   LogOut,
   PiggyBank,
-  Plus,
   ReceiptText,
   Target,
   TrendingUp,
@@ -16,12 +15,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { BudgetDialog, SavingsGoalDialog, TransactionDialog } from "@/components/DashboardActions";
 
 type Expense = {
   id: string;
@@ -30,6 +26,8 @@ type Expense = {
   description: string;
   date: string;
 };
+
+type Income = Expense;
 
 type SavingsGoal = {
   id: string;
@@ -51,24 +49,18 @@ const currency = new Intl.NumberFormat("en-NG", {
   maximumFractionDigits: 0,
 });
 
-const expenseCategories = ["Food", "Transport", "Housing", "Utilities", "Health", "Education", "Debt", "Lifestyle", "Other"];
-
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [monthlyIncome, setMonthlyIncome] = useState(0);
+  const [profileIncome, setProfileIncome] = useState(0);
+  const [incomes, setIncomes] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [goals, setGoals] = useState<SavingsGoal[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [healthScore, setHealthScore] = useState<number | null>(null);
-  const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("Food");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const today = new Date().toISOString().slice(0, 10);
 
   const startOfMonth = useMemo(() => {
     const current = new Date();
@@ -79,61 +71,59 @@ const Dashboard = () => {
     if (!user) return;
     setLoading(true);
 
-    const [profileResult, expenseResult, goalsResult, budgetsResult, healthResult] = await Promise.all([
+    const [profileResult, incomeResult, expenseResult, goalsResult, budgetsResult, healthResult] = await Promise.all([
       supabase.from("profiles").select("monthly_income").eq("id", user.id).maybeSingle(),
+      supabase.from("incomes").select("id, amount, category, description, date").eq("user_id", user.id).gte("date", startOfMonth).order("date", { ascending: false }),
       supabase.from("expenses").select("id, amount, category, description, date").eq("user_id", user.id).gte("date", startOfMonth).order("date", { ascending: false }),
       supabase.from("savings_goals").select("id, name, current_amount, target_amount, target_date").eq("user_id", user.id).eq("is_completed", false).order("created_at", { ascending: false }).limit(3),
-      supabase.from("budgets").select("id, name, total_amount").eq("user_id", user.id).lte("start_date", date).gte("end_date", date).limit(1),
+      supabase.from("budgets").select("id, name, total_amount").eq("user_id", user.id).lte("start_date", today).gte("end_date", today).limit(1),
       supabase.from("financial_health_assessments").select("health_score").eq("user_id", user.id).order("completed_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
 
-    const firstError = [profileResult.error, expenseResult.error, goalsResult.error, budgetsResult.error, healthResult.error].find(Boolean);
+    const firstError = [profileResult.error, incomeResult.error, expenseResult.error, goalsResult.error, budgetsResult.error, healthResult.error].find(Boolean);
     if (firstError) {
       toast({ title: "Could not load all dashboard data", description: firstError.message, variant: "destructive" });
     }
 
-    setMonthlyIncome(Number(profileResult.data?.monthly_income ?? 0));
+    setProfileIncome(Number(profileResult.data?.monthly_income ?? 0));
+    setIncomes((incomeResult.data ?? []) as Income[]);
     setExpenses((expenseResult.data ?? []) as Expense[]);
     setGoals((goalsResult.data ?? []) as SavingsGoal[]);
     setBudgets((budgetsResult.data ?? []) as Budget[]);
     setHealthScore(healthResult.data?.health_score ?? null);
     setLoading(false);
-  }, [date, startOfMonth, toast, user]);
+  }, [startOfMonth, toast, today, user]);
 
   useEffect(() => {
     void loadDashboard();
   }, [loadDashboard]);
 
+  const recordedIncome = incomes.reduce((sum, income) => sum + Number(income.amount), 0);
+  const monthlyIncome = recordedIncome || profileIncome;
   const monthlyExpenses = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
   const balance = monthlyIncome - monthlyExpenses;
   const savingsRate = monthlyIncome > 0 ? Math.max(0, Math.round((balance / monthlyIncome) * 100)) : 0;
   const activeBudget = budgets[0];
   const budgetUsed = activeBudget?.total_amount ? Math.min(100, Math.round((monthlyExpenses / Number(activeBudget.total_amount)) * 100)) : 0;
 
-  const addExpense = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!user || Number(amount) <= 0) return;
-    setSaving(true);
-    const { error } = await supabase.from("expenses").insert({
-      user_id: user.id,
-      description: description.trim(),
-      amount: Number(amount),
-      category,
-      date,
+  const chartData = useMemo(() => {
+    const days = Array.from({ length: 4 }, (_, index) => {
+      const end = new Date();
+      end.setDate(end.getDate() - index * 7);
+      const start = new Date(end);
+      start.setDate(end.getDate() - 6);
+      return { start, end, name: `W${4 - index}`, income: 0, expenses: 0 };
+    }).reverse();
+    const add = (items: Expense[], key: "income" | "expenses") => items.forEach((item) => {
+      const itemDate = new Date(`${item.date}T00:00:00`);
+      const week = days.find((entry) => itemDate >= entry.start && itemDate <= entry.end);
+      if (week) week[key] += Number(item.amount);
     });
-    setSaving(false);
-
-    if (error) {
-      toast({ title: "Expense not saved", description: error.message, variant: "destructive" });
-      return;
-    }
-
-    toast({ title: "Expense recorded", description: `${currency.format(Number(amount))} added to ${category}.` });
-    setAmount("");
-    setDescription("");
-    setDialogOpen(false);
-    await loadDashboard();
-  };
+    add(incomes, "income");
+    add(expenses, "expenses");
+    return days.map(({ name, income, expenses: outflow }) => ({ name, Income: income, Expenses: outflow }));
+  }, [expenses, incomes]);
+  const maxChartValue = Math.max(1, ...chartData.flatMap((item) => [item.Income, item.Expenses]));
 
   const handleSignOut = async () => {
     await signOut();
@@ -162,19 +152,7 @@ const Dashboard = () => {
             <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user?.user_metadata?.full_name?.split(" ")[0] || "there"}</h1>
             <p className="mt-2 text-slate-600">Here is your money position for {new Date().toLocaleString("en-NG", { month: "long", year: "numeric" })}.</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild><Button className="bg-emerald-700 hover:bg-emerald-800"><Plus className="mr-2 h-4 w-4" />Record expense</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Record an expense</DialogTitle></DialogHeader>
-              <form className="space-y-4" onSubmit={addExpense}>
-                <div className="space-y-2"><Label htmlFor="description">Description</Label><Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="e.g. Weekly groceries" required /></div>
-                <div className="space-y-2"><Label htmlFor="amount">Amount (₦)</Label><Input id="amount" type="number" min="1" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required /></div>
-                <div className="space-y-2"><Label>Category</Label><Select value={category} onValueChange={setCategory}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{expenseCategories.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-2"><Label htmlFor="date">Date</Label><Input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required /></div>
-                <Button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800" disabled={saving}>{saving ? "Saving…" : "Save expense"}</Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+          {user && <TransactionDialog userId={user.id} onSaved={loadDashboard} />}
         </div>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -188,6 +166,18 @@ const Dashboard = () => {
           ))}
         </section>
 
+        <section className="mt-6">
+          <Card>
+            <CardHeader><CardTitle>Four-week cash flow</CardTitle></CardHeader>
+            <CardContent>
+              <div className="mb-5 flex gap-5 text-xs text-slate-600"><span className="flex items-center gap-2"><i className="h-3 w-3 rounded-sm bg-emerald-700" />Income</span><span className="flex items-center gap-2"><i className="h-3 w-3 rounded-sm bg-rose-600" />Expenses</span></div>
+              <div className="grid h-52 grid-cols-4 gap-4 border-b border-slate-200">
+                {chartData.map((item) => <div key={item.name} className="flex min-w-0 flex-col items-center justify-end gap-2"><div className="flex h-40 w-full items-end justify-center gap-2"><div title={`Income: ${currency.format(item.Income)}`} className="w-1/3 max-w-10 rounded-t bg-emerald-700 transition-all" style={{ height: `${Math.max(item.Income ? 4 : 0, (item.Income / maxChartValue) * 100)}%` }} /><div title={`Expenses: ${currency.format(item.Expenses)}`} className="w-1/3 max-w-10 rounded-t bg-rose-600 transition-all" style={{ height: `${Math.max(item.Expenses ? 4 : 0, (item.Expenses / maxChartValue) * 100)}%` }} /></div><span className="pb-2 text-xs font-medium text-slate-500">{item.name}</span></div>)}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         <section className="mt-6 grid gap-6 lg:grid-cols-3">
           <Card className="lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between"><CardTitle className="flex items-center gap-2"><ReceiptText className="h-5 w-5 text-emerald-700" />Recent expenses</CardTitle><span className="text-sm text-slate-500">This month</span></CardHeader>
@@ -197,13 +187,13 @@ const Dashboard = () => {
           </Card>
 
           <div className="space-y-6">
-            <Card><CardHeader><CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5 text-blue-700" />Monthly budget</CardTitle></CardHeader><CardContent>{activeBudget ? <div className="space-y-3"><div className="flex justify-between text-sm"><span>{activeBudget.name}</span><strong>{budgetUsed}% used</strong></div><Progress value={budgetUsed} /><p className="text-sm text-slate-500">{currency.format(monthlyExpenses)} of {currency.format(activeBudget.total_amount)}</p></div> : <p className="text-sm text-slate-500">No active budget yet. Budget creation is coming in the next build.</p>}</CardContent></Card>
+            <Card><CardHeader><div className="flex items-center justify-between gap-3"><CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5 text-blue-700" />Monthly budget</CardTitle>{user && <BudgetDialog userId={user.id} onSaved={loadDashboard} />}</div></CardHeader><CardContent>{activeBudget ? <div className="space-y-3"><div className="flex justify-between text-sm"><span>{activeBudget.name}</span><strong>{budgetUsed}% used</strong></div><Progress value={budgetUsed} /><p className="text-sm text-slate-500">{currency.format(monthlyExpenses)} of {currency.format(activeBudget.total_amount)}</p></div> : <p className="text-sm text-slate-500">No active budget yet. Create one to set your monthly spending limit.</p>}</CardContent></Card>
             <Card><CardHeader><CardTitle className="flex items-center gap-2"><Target className="h-5 w-5 text-amber-700" />Financial health</CardTitle></CardHeader><CardContent><div className="flex items-end gap-2"><span className="text-4xl font-bold">{healthScore ?? "—"}</span><span className="pb-1 text-slate-500">/100</span></div><p className="mt-3 text-sm text-slate-500">{healthScore === null ? "Complete your health assessment to unlock personalised guidance." : "Your latest assessment score."}</p></CardContent></Card>
           </div>
         </section>
 
         <section className="mt-6">
-          <Card><CardHeader><CardTitle className="flex items-center gap-2"><PiggyBank className="h-5 w-5 text-emerald-700" />Savings goals</CardTitle></CardHeader><CardContent className="grid gap-4 md:grid-cols-3">{goals.length === 0 ? <p className="text-sm text-slate-500">No savings goals yet.</p> : goals.map((goal) => { const progress = Math.min(100, Math.round(((goal.current_amount ?? 0) / goal.target_amount) * 100)); return <div key={goal.id} className="rounded-xl border p-4"><div className="mb-3 flex items-start justify-between gap-3"><div><p className="font-semibold">{goal.name}</p><p className="text-xs text-slate-500">Target {currency.format(goal.target_amount)}</p></div><span className="text-sm font-bold text-emerald-700">{progress}%</span></div><Progress value={progress} /><p className="mt-3 text-sm text-slate-600">{currency.format(goal.current_amount ?? 0)} saved</p></div>; })}</CardContent></Card>
+          <Card><CardHeader><div className="flex items-center justify-between gap-3"><CardTitle className="flex items-center gap-2"><PiggyBank className="h-5 w-5 text-emerald-700" />Savings goals</CardTitle>{user && <SavingsGoalDialog userId={user.id} onSaved={loadDashboard} />}</div></CardHeader><CardContent className="grid gap-4 md:grid-cols-3">{goals.length === 0 ? <p className="text-sm text-slate-500">No savings goals yet. Create your first goal to start tracking progress.</p> : goals.map((goal) => { const progress = Math.min(100, Math.round(((goal.current_amount ?? 0) / goal.target_amount) * 100)); return <div key={goal.id} className="rounded-xl border p-4"><div className="mb-3 flex items-start justify-between gap-3"><div><p className="font-semibold">{goal.name}</p><p className="text-xs text-slate-500">Target {currency.format(goal.target_amount)}</p></div><span className="text-sm font-bold text-emerald-700">{progress}%</span></div><Progress value={progress} /><p className="mt-3 text-sm text-slate-600">{currency.format(goal.current_amount ?? 0)} saved</p></div>; })}</CardContent></Card>
         </section>
       </main>
     </div>
