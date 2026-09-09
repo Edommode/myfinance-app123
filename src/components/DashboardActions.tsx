@@ -142,3 +142,39 @@ export const SavingsGoalDialog = ({ userId, onSaved }: ActionProps) => {
     </Dialog>
   );
 };
+
+type ContributionProps = ActionProps & {
+  goal: { id: string; name: string; currentAmount: number; targetAmount: number };
+};
+
+export const SavingsContributionDialog = ({ goal, onSaved }: ContributionProps) => {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [amount, setAmount] = useState("");
+
+  const save = async (event: FormEvent) => {
+    event.preventDefault();
+    const contribution = Number(amount);
+    if (contribution <= 0) return;
+    setSaving(true);
+    const { data: updatedAmount, error: goalError } = await supabase.rpc("add_savings_contribution", { p_goal_id: goal.id, p_amount: contribution });
+    setSaving(false);
+    if (goalError) {
+      toast({ title: "Goal progress not updated", description: goalError.message, variant: "destructive" });
+      return;
+    }
+    const completed = Number(updatedAmount ?? 0) >= goal.targetAmount;
+    toast({ title: completed ? "Savings goal achieved!" : "Contribution added", description: `${currency.format(contribution)} added to ${goal.name}.` });
+    setAmount("");
+    setOpen(false);
+    await onSaved();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild><Button variant="ghost" size="sm" className="mt-3 w-full text-emerald-700 hover:text-emerald-800"><Plus className="mr-2 h-4 w-4" />Add contribution</Button></DialogTrigger>
+      <DialogContent><DialogHeader><DialogTitle>Add to {goal.name}</DialogTitle></DialogHeader><form className="space-y-4" onSubmit={save}><div className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900"><strong>{currency.format(goal.currentAmount)}</strong> saved of {currency.format(goal.targetAmount)}</div><div className="space-y-2"><Label htmlFor={`contribution-${goal.id}`}>Contribution amount (₦)</Label><Input id={`contribution-${goal.id}`} type="number" min="1" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} required /></div><Button type="submit" className="w-full bg-emerald-700 hover:bg-emerald-800" disabled={saving}>{saving ? "Saving…" : "Add contribution"}</Button></form></DialogContent>
+    </Dialog>
+  );
+};
