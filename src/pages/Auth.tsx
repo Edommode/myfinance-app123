@@ -36,7 +36,7 @@ const Auth = () => {
           title: "Welcome back!",
           description: "You've successfully signed in to MyFinance.",
         });
-        navigate("/");
+        navigate("/dashboard");
       }
     } catch (error: any) {
       toast({
