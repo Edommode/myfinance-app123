@@ -9,6 +9,7 @@ import {
   ReceiptText,
   Target,
   TrendingUp,
+  UserRound,
   WalletCards,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -140,6 +141,7 @@ const Dashboard = () => {
           </button>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate("/transactions")}><ReceiptText className="mr-2 h-4 w-4" />Transactions</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}><UserRound className="mr-2 h-4 w-4" />Profile</Button>
             <span className="hidden text-sm text-slate-600 sm:block">{user?.user_metadata?.full_name || user?.email}</span>
             <Button variant="outline" size="sm" onClick={handleSignOut}><LogOut className="mr-2 h-4 w-4" />Sign out</Button>
           </div>
