@@ -148,6 +148,18 @@ export type Database = {
         }
         Relationships: []
       }
+      coaching_requests: {
+        Row: { created_at: string; id: string; notes: string | null; preferred_date: string | null; status: string; topic: string; user_id: string }
+        Insert: { created_at?: string; id?: string; notes?: string | null; preferred_date?: string | null; status?: string; topic: string; user_id: string }
+        Update: { created_at?: string; id?: string; notes?: string | null; preferred_date?: string | null; status?: string; topic?: string; user_id?: string }
+        Relationships: []
+      }
+      contact_submissions: {
+        Row: { created_at: string; email: string; first_name: string; id: string; last_name: string; message: string; phone: string | null; status: string; subject: string; user_id: string | null }
+        Insert: { created_at?: string; email: string; first_name: string; id?: string; last_name: string; message: string; phone?: string | null; status?: string; subject: string; user_id?: string | null }
+        Update: { created_at?: string; email?: string; first_name?: string; id?: string; last_name?: string; message?: string; phone?: string | null; status?: string; subject?: string; user_id?: string | null }
+        Relationships: []
+      }
       daily_tips_preferences: {
         Row: {
           created_at: string | null

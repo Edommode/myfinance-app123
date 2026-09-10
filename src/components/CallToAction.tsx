@@ -25,21 +25,23 @@ const CallToAction = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <Button 
+              disabled
               size="lg" 
               className="bg-white text-emerald-600 hover:bg-white/90 font-semibold group px-8 py-4"
             >
               <Download className="mr-2 h-5 w-5" />
-              Download for Android
+              Android app — coming soon
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
             
             <Button 
+              disabled
               size="lg" 
               variant="outline" 
               className="border-white text-white hover:bg-white hover:text-emerald-600 font-semibold px-8 py-4"
             >
               <Apple className="mr-2 h-5 w-5" />
-              Download for iOS
+              iOS app — coming soon
             </Button>
           </div>
 
@@ -90,7 +92,7 @@ const CallToAction = () => {
 
           <div className="mt-8 animate-fade-in" style={{ animationDelay: '1s' }}>
             <p className="text-white/80 text-sm">
-              Download is free • No credit card required • Available on iOS and Android
+              Web access is available now • Mobile apps are coming soon
             </p>
           </div>
         </div>

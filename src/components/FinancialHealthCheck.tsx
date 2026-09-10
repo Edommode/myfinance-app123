@@ -108,8 +108,8 @@ const FinancialHealthCheck = () => {
           user_id: user.id,
           health_score: score,
           health_category: health.status.toLowerCase().replace(' ', '_'),
-          assessment_data: assessmentData as any,
-          recommendations: recommendations as any
+          assessment_data: assessmentData,
+          recommendations
         });
 
       if (error) throw error;
@@ -321,8 +321,8 @@ const FinancialHealthCheck = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button className="bg-emerald-600 hover:bg-emerald-700">
-                    Download MyFinance App
+                  <Button disabled className="bg-emerald-600">
+                    Mobile app coming soon
                   </Button>
                   <Button variant="outline" onClick={resetQuiz}>
                     Retake Assessment

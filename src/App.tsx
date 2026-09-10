@@ -11,6 +11,12 @@ import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
 import Profile from "./pages/Profile";
 import HealthAssessment from "./pages/HealthAssessment";
+import Calculators from "./pages/Calculators";
+import Education from "./pages/Education";
+import Community from "./pages/Community";
+import Tips from "./pages/Tips";
+import Coaching from "./pages/Coaching";
+import Legal from "./pages/Legal";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -30,6 +36,12 @@ const App = () => (
             <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/health-assessment" element={<ProtectedRoute><HealthAssessment /></ProtectedRoute>} />
+            <Route path="/calculators" element={<Calculators />} />
+            <Route path="/learn" element={<Education />} />
+            <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+            <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
+            <Route path="/coaching" element={<ProtectedRoute><Coaching /></ProtectedRoute>} />
+            <Route path="/legal/:document" element={<Legal />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

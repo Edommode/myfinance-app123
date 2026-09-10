@@ -1,8 +1,10 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Smartphone, TrendingUp, Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   return (
     <section className="pt-24 pb-16 bg-gradient-to-br from-emerald-50 to-gold-100 overflow-hidden">
       <div className="container mx-auto px-4">
@@ -26,13 +28,13 @@ const HeroSection = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white group">
+              <Button size="lg" onClick={() => navigate("/auth")} className="bg-emerald-600 hover:bg-emerald-700 text-white group">
                 Start Your Financial Journey
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button size="lg" variant="outline" className="border-emerald-600 text-emerald-600 hover:bg-emerald-50">
+              <Button size="lg" disabled variant="outline" className="border-emerald-600 text-emerald-600">
                 <Smartphone className="mr-2 h-5 w-5" />
-                Download App
+                Mobile app coming soon
               </Button>
             </div>
 

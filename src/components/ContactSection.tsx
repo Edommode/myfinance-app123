@@ -5,8 +5,30 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Phone, MapPin, MessageCircle, Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const ContactSection = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [subject, setSubject] = useState("Budgeting Help");
+  const [sending, setSending] = useState(false);
+  const topics = ["Budgeting Help", "Investment Education", "Debt Management", "Premium Coaching", "Other"];
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); setSending(true);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    const { error } = await supabase.from("contact_submissions").insert({
+      user_id: user?.id ?? null, first_name: String(form.get("firstName")||"").trim(),
+      last_name: String(form.get("lastName")||"").trim(), email: String(form.get("email")||"").trim(),
+      phone: String(form.get("phone")||"").trim() || null, subject, message: String(form.get("message")||"").trim()
+    });
+    setSending(false);
+    if(error) return toast({title:"Message not sent",description:error.message,variant:"destructive"});
+    formElement.reset(); setSubject("Budgeting Help");
+    toast({title:"Message received",description:"Finance Wise can now review your request."});
+  };
   return (
     <section id="contact" className="py-16 bg-white">
       <div className="container mx-auto px-4">
@@ -29,7 +51,7 @@ const ContactSection = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="space-y-6">
+              <form className="space-y-6" onSubmit={submit}>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="firstName" className="block text-sm font-medium text-emerald-800 mb-2">
@@ -37,8 +59,10 @@ const ContactSection = () => {
                     </label>
                     <Input 
                       id="firstName" 
+                      name="firstName"
                       placeholder="Enter your first name"
                       className="border-emerald-200 focus:border-emerald-500"
+                      required
                     />
                   </div>
                   <div>
@@ -47,8 +71,10 @@ const ContactSection = () => {
                     </label>
                     <Input 
                       id="lastName" 
+                      name="lastName"
                       placeholder="Enter your last name"
                       className="border-emerald-200 focus:border-emerald-500"
+                      required
                     />
                   </div>
                 </div>
@@ -59,9 +85,11 @@ const ContactSection = () => {
                   </label>
                   <Input 
                     id="email" 
+                    name="email"
                     type="email" 
                     placeholder="your.email@example.com"
                     className="border-emerald-200 focus:border-emerald-500"
+                    required
                   />
                 </div>
 
@@ -71,6 +99,7 @@ const ContactSection = () => {
                   </label>
                   <Input 
                     id="phone" 
+                    name="phone"
                     type="tel" 
                     placeholder="+234 (xxx) xxx-xxxx"
                     className="border-emerald-200 focus:border-emerald-500"
@@ -82,18 +111,7 @@ const ContactSection = () => {
                     How can we help you?
                   </label>
                   <div className="flex flex-wrap gap-2 mb-3">
-                    <Badge variant="outline" className="cursor-pointer hover:bg-emerald-50 border-emerald-200">
-                      Budgeting Help
-                    </Badge>
-                    <Badge variant="outline" className="cursor-pointer hover:bg-emerald-50 border-emerald-200">
-                      Investment Advice
-                    </Badge>
-                    <Badge variant="outline" className="cursor-pointer hover:bg-emerald-50 border-emerald-200">
-                      Debt Management
-                    </Badge>
-                    <Badge variant="outline" className="cursor-pointer hover:bg-emerald-50 border-emerald-200">
-                      Premium Coaching
-                    </Badge>
+                    {topics.map(topic => <button key={topic} type="button" onClick={() => setSubject(topic)}><Badge variant="outline" className={`cursor-pointer border-emerald-200 ${subject===topic?"bg-emerald-700 text-white":"hover:bg-emerald-50"}`}>{topic}</Badge></button>)}
                   </div>
                 </div>
 
@@ -103,14 +121,18 @@ const ContactSection = () => {
                   </label>
                   <Textarea 
                     id="message" 
+                    name="message"
                     placeholder="Tell us about your financial goals or questions..."
                     className="border-emerald-200 focus:border-emerald-500 min-h-[120px]"
+                    required
+                    minLength={10}
+                    maxLength={3000}
                   />
                 </div>
 
-                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Button type="submit" disabled={sending} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
                   <Send className="w-4 h-4 mr-2" />
-                  Send Message
+                  {sending ? "Sending…" : "Send Message"}
                 </Button>
               </form>
             </CardContent>
@@ -179,9 +201,7 @@ const ContactSection = () => {
                 <div className="bg-red-50 p-4 rounded-lg text-center">
                   <h4 className="font-semibold text-red-800 mb-2">Finance Wise</h4>
                   <p className="text-red-600 mb-4">50,000+ subscribers learning to build wealth</p>
-                  <Button className="bg-red-600 hover:bg-red-700 text-white w-full">
-                    Subscribe to Youtube.com/@financewise
-                  </Button>
+                  <Button className="bg-red-600 hover:bg-red-700 text-white w-full" asChild><a href="https://youtube.com/@financewise" target="_blank" rel="noopener noreferrer">Subscribe to Youtube.com/@financewise</a></Button>
                 </div>
               </CardContent>
             </Card>
@@ -206,3 +226,4 @@ const ContactSection = () => {
 };
 
 export default ContactSection;
+import { FormEvent, useState } from "react";
