@@ -20,39 +20,39 @@ const InvestmentEducation = () => {
   const investments = [
     {
       title: "Treasury Bills",
-      description: "Low-risk government securities with guaranteed returns",
-      minAmount: "₦1,000",
+      description: "Short-term Federal Government securities. Learn auction pricing, yield, maturity and liquidity risk.",
+      minAmount: "Varies by offer/channel",
       riskLevel: "Low",
-      expectedReturn: "10-15% annually",
+      expectedReturn: "Market-determined; not guaranteed",
       color: "emerald",
       healthLevel: "all", slug: "treasury-bills"
     },
     {
       title: "Mutual Funds",
-      description: "Professionally managed diversified investment portfolios",
-      minAmount: "₦5,000",
+      description: "Pooled portfolios with different mandates, fees, settlement periods and underlying risks.",
+      minAmount: "Varies by fund",
       riskLevel: "Medium",
-      expectedReturn: "12-20% annually",
+      expectedReturn: "Depends on assets and fees",
       color: "gold",
-      healthLevel: "medium", slug: "mutual-funds"
+      healthLevel: "medium", slug: "mutual-funds-etfs"
     },
     {
-      title: "AgricTech Investments",
-      description: "Invest in African agricultural technology and farming projects",
-      minAmount: "₦10,000",
-      riskLevel: "Medium-High",
-      expectedReturn: "15-25% annually",
+      title: "Alternative Opportunities",
+      description: "Learn to assess private, agriculture-linked and digital offers where liquidity, disclosure and fraud risks may be higher.",
+      minAmount: "Offer-specific",
+      riskLevel: "High / complex",
+      expectedReturn: "No reliable fixed expectation",
       color: "emerald",
-      healthLevel: "high", slug: "agritech"
+      healthLevel: "high", slug: "due-diligence"
     }
   ];
 
   const courses = [
-    ["Money Mistakes to Avoid in Your 20s","money-mistakes"],
-    ["How to Build Wealth with a 9-5 Job","wealth-9-to-5"],
-    ["Debt-Free Living in Africa","debt-free"],
-    ["Start Investing with ₦5,000","start-investing"],
-    ["Understanding Nigerian Capital Market","capital-market"]
+    ["Money Foundations for Real Life","/courses/money-foundations"],
+    ["Your 12-Month Wealth Plan","/courses/wealth-plan"],
+    ["Debt Decisions & Repayment Strategy","/courses/debt-mastery"],
+    ["Investing in Nigeria","/courses/nigeria-investing/risk-return"],
+    ["Portfolio Construction & Review","/courses/portfolio-practice"]
   ];
 
   return (
@@ -71,7 +71,7 @@ const InvestmentEducation = () => {
         {/* Investment Options */}
         <div className="mb-12">
           <h3 className="text-2xl font-bold text-emerald-900 mb-6 text-center">
-            Safe Investment Options in Africa
+            Understand Investment Options
           </h3>
           <div className="grid md:grid-cols-3 gap-6">
             {investments.map((investment, index) => (
@@ -91,14 +91,14 @@ const InvestmentEducation = () => {
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-emerald-600">Minimum:</span>
+                      <span className="text-emerald-600">Entry amount:</span>
                       <span className="font-semibold text-emerald-800">{investment.minAmount}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-emerald-600">Expected Return:</span>
+                      <span className="text-emerald-600">Return:</span>
                       <span className="font-semibold text-emerald-800">{investment.expectedReturn}</span>
                     </div>
-                    <Button onClick={() => navigate(`/learn?lesson=${investment.slug}`)} className="w-full bg-emerald-600 hover:bg-emerald-700 mt-4">
+                    <Button onClick={() => navigate(`/courses/nigeria-investing/${investment.slug}`)} className="w-full bg-emerald-600 hover:bg-emerald-700 mt-4">
                       Learn More
                     </Button>
                   </div>
@@ -175,14 +175,14 @@ const InvestmentEducation = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {courses.map(([course,slug], index) => (
-                  <div key={slug} className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+                {courses.map(([course,path], index) => (
+                  <div key={path} className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
                     <span className="text-emerald-800">{course}</span>
                     <div className="flex items-center space-x-2">
                       <Badge variant="outline" className="bg-gold-100 text-gold-800 border-gold-200">
                         {index < 2 ? "Premium" : "Free"}
                       </Badge>
-                      <Button size="sm" variant="outline" aria-label={`Open ${course}`} onClick={() => navigate(`/learn?lesson=${slug}`)}>
+                      <Button size="sm" variant="outline" aria-label={`Open ${course}`} onClick={() => navigate(path)}>
                         <Play className="w-4 h-4" />
                       </Button>
                     </div>
