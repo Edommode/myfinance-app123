@@ -12,71 +12,73 @@ import {
   Bell,
   Smartphone
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const FeaturesSection = () => {
+  const navigate = useNavigate();
   const features = [
     {
       icon: PiggyBank,
       title: "Smart Budgeting Tool",
       description: "Monthly budget planners customized for students, salary earners, and small business owners with category-based spending analysis.",
       features: ["Expense Tracker", "Category Analysis", "Custom Plans"],
-      color: "emerald"
+      color: "emerald", action: () => navigate("/dashboard")
     },
     {
       icon: Target,
       title: "Smart Savings Tracker",
       description: "Set and monitor savings goals with visual trackers. Join group savings challenges like the 52-week savings challenge.",
       features: ["Goal Setting", "Progress Tracking", "Group Challenges"],
-      color: "gold"
+      color: "gold", action: () => navigate("/dashboard")
     },
     {
       icon: BookOpen,
       title: "Investment Education Hub",
       description: "Learn about safe African investments including Treasury Bills, Mutual Funds, and AgricTech with risk education.",
       features: ["African Investments", "Risk Education", "How-to Guides"],
-      color: "emerald"
+      color: "emerald", action: () => document.getElementById("education")?.scrollIntoView({behavior:"smooth"})
     },
     {
       icon: Calculator,
       title: "Financial Calculator Tools",
       description: "Access loan repayment, compound interest, and savings projection calculators designed for African markets.",
       features: ["Loan Calculator", "Interest Calculator", "Savings Projector"],
-      color: "gold"
+      color: "gold", action: () => navigate("/calculators")
     },
     {
       icon: Users,
       title: "Community Forum",
       description: "Join chat groups by topics like Student Finances, Business Owners, NYSC, and Side Hustles with expert Q&A sessions.",
       features: ["Topic Groups", "Expert Q&A", "Peer Support"],
-      color: "emerald"
+      color: "emerald", action: () => navigate("/community")
     },
     {
       icon: TrendingUp,
       title: "Personalized Financial Plan",
       description: "Get custom plans after onboarding with budget suggestions, investment recommendations, and spending alerts.",
       features: ["Custom Budget", "Investment Tips", "Smart Alerts"],
-      color: "gold"
+      color: "gold", action: () => navigate("/profile")
     },
     {
       icon: Bell,
       title: "Daily Money Tips",
       description: "Receive push notifications with tips on avoiding debt traps, saving on airtime/data, and income generation ideas.",
       features: ["Daily Tips", "Debt Avoidance", "Income Ideas"],
-      color: "emerald"
+      color: "emerald", action: () => navigate("/tips")
     },
     {
       icon: Shield,
       title: "Premium Coaching",
       description: "Book sessions with certified finance coaches, access video/audio lessons, and join live Q&A sessions.",
       features: ["Expert Coaching", "Video Lessons", "Live Q&A"],
-      color: "gold"
+      color: "gold", action: () => navigate("/coaching")
     },
     {
       icon: Smartphone,
       title: "Bank Sync & Integration",
       description: "Sync with popular African fintech wallets like Flutterwave, Opay, and Kuda for seamless expense tracking.",
       features: ["Bank Sync", "Fintech Integration", "Auto Tracking"],
-      color: "emerald"
+      color: "emerald", action: () => document.getElementById("contact")?.scrollIntoView({behavior:"smooth"})
     }
   ];
 
@@ -96,9 +98,13 @@ const FeaturesSection = () => {
           {features.map((feature, index) => {
             const IconComponent = feature.icon;
             return (
-              <Card 
+              <Card
+                role="button"
+                tabIndex={0}
+                onClick={feature.action}
+                onKeyDown={(event) => { if(event.key==="Enter"||event.key===" ") feature.action(); }}
                 key={index} 
-                className="hover:shadow-lg transition-shadow duration-300 animate-fade-in border-emerald-100"
+                className="cursor-pointer hover:shadow-lg transition-shadow duration-300 animate-fade-in border-emerald-100"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <CardHeader>
