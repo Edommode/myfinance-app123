@@ -11,9 +11,11 @@ import {
   ExternalLink
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const InvestmentEducation = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const investments = [
     {
@@ -23,7 +25,7 @@ const InvestmentEducation = () => {
       riskLevel: "Low",
       expectedReturn: "10-15% annually",
       color: "emerald",
-      healthLevel: "all"
+      healthLevel: "all", slug: "treasury-bills"
     },
     {
       title: "Mutual Funds",
@@ -32,7 +34,7 @@ const InvestmentEducation = () => {
       riskLevel: "Medium",
       expectedReturn: "12-20% annually",
       color: "gold",
-      healthLevel: "medium"
+      healthLevel: "medium", slug: "mutual-funds"
     },
     {
       title: "AgricTech Investments",
@@ -41,16 +43,16 @@ const InvestmentEducation = () => {
       riskLevel: "Medium-High",
       expectedReturn: "15-25% annually",
       color: "emerald",
-      healthLevel: "high"
+      healthLevel: "high", slug: "agritech"
     }
   ];
 
   const courses = [
-    "Money Mistakes to Avoid in Your 20s",
-    "How to Build Wealth with a 9-5 Job",
-    "Debt-Free Living in Africa",
-    "Start Investing with ₦5,000",
-    "Understanding Nigerian Capital Market"
+    ["Money Mistakes to Avoid in Your 20s","money-mistakes"],
+    ["How to Build Wealth with a 9-5 Job","wealth-9-to-5"],
+    ["Debt-Free Living in Africa","debt-free"],
+    ["Start Investing with ₦5,000","start-investing"],
+    ["Understanding Nigerian Capital Market","capital-market"]
   ];
 
   return (
@@ -96,7 +98,7 @@ const InvestmentEducation = () => {
                       <span className="text-emerald-600">Expected Return:</span>
                       <span className="font-semibold text-emerald-800">{investment.expectedReturn}</span>
                     </div>
-                    <Button className="w-full bg-emerald-600 hover:bg-emerald-700 mt-4">
+                    <Button onClick={() => navigate(`/learn?lesson=${investment.slug}`)} className="w-full bg-emerald-600 hover:bg-emerald-700 mt-4">
                       Learn More
                     </Button>
                   </div>
@@ -173,14 +175,14 @@ const InvestmentEducation = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {courses.map((course, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+                {courses.map(([course,slug], index) => (
+                  <div key={slug} className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
                     <span className="text-emerald-800">{course}</span>
                     <div className="flex items-center space-x-2">
                       <Badge variant="outline" className="bg-gold-100 text-gold-800 border-gold-200">
                         {index < 2 ? "Premium" : "Free"}
                       </Badge>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" aria-label={`Open ${course}`} onClick={() => navigate(`/learn?lesson=${slug}`)}>
                         <Play className="w-4 h-4" />
                       </Button>
                     </div>
