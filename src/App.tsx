@@ -13,6 +13,8 @@ import Profile from "./pages/Profile";
 import HealthAssessment from "./pages/HealthAssessment";
 import Calculators from "./pages/Calculators";
 import Education from "./pages/Education";
+import Course from "./pages/Course";
+import Premium from "./pages/Premium";
 import Community from "./pages/Community";
 import Tips from "./pages/Tips";
 import Coaching from "./pages/Coaching";
@@ -38,6 +40,9 @@ const App = () => (
             <Route path="/health-assessment" element={<ProtectedRoute><HealthAssessment /></ProtectedRoute>} />
             <Route path="/calculators" element={<Calculators />} />
             <Route path="/learn" element={<Education />} />
+            <Route path="/courses/:courseSlug" element={<Course />} />
+            <Route path="/courses/:courseSlug/:lessonSlug" element={<Course />} />
+            <Route path="/premium" element={<Premium />} />
             <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
             <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
             <Route path="/coaching" element={<ProtectedRoute><Coaching /></ProtectedRoute>} />
