@@ -157,6 +157,13 @@ const Dashboard = () => {
           </div>
           {user && <TransactionDialog userId={user.id} onSaved={loadDashboard} />}
         </div>
+        <div className="mb-8 flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={() => navigate("/calculators")}>Calculators</Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/learn")}>Learning hub</Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/tips")}>Daily tips</Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/community")}>Community</Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/coaching")}>Coaching</Button>
+        </div>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {[
