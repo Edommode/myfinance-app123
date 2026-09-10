@@ -1,1 +1,12 @@
 project_id = "ngaxmlnthkfgnbxuwdkc"
+
+# New sb_publishable keys are validated inside these functions with auth.getUser().
+[functions.initialize-payment]
+verify_jwt = false
+
+[functions.verify-payment]
+verify_jwt = false
+
+# Paystack cannot send a Supabase JWT; the webhook verifies HMAC-SHA512 instead.
+[functions.paystack-webhook]
+verify_jwt = false
