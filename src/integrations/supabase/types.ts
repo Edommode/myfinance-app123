@@ -160,6 +160,12 @@ export type Database = {
         Update: { created_at?: string; email?: string; first_name?: string; id?: string; last_name?: string; message?: string; phone?: string | null; status?: string; subject?: string; user_id?: string | null }
         Relationships: []
       }
+      course_progress: {
+        Row: { completed: boolean; completed_at: string | null; course_slug: string; id: string; lesson_slug: string; updated_at: string; user_id: string }
+        Insert: { completed?: boolean; completed_at?: string | null; course_slug: string; id?: string; lesson_slug: string; updated_at?: string; user_id: string }
+        Update: { completed?: boolean; completed_at?: string | null; course_slug?: string; id?: string; lesson_slug?: string; updated_at?: string; user_id?: string }
+        Relationships: []
+      }
       daily_tips_preferences: {
         Row: {
           created_at: string | null
@@ -484,6 +490,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_subscriptions: {
+        Row: { created_at: string; current_period_end: string | null; id: string; plan: string; provider: string | null; provider_reference: string | null; status: string; updated_at: string; user_id: string }
+        Insert: { created_at?: string; current_period_end?: string | null; id?: string; plan?: string; provider?: string | null; provider_reference?: string | null; status?: string; updated_at?: string; user_id: string }
+        Update: { created_at?: string; current_period_end?: string | null; id?: string; plan?: string; provider?: string | null; provider_reference?: string | null; status?: string; updated_at?: string; user_id?: string }
+        Relationships: []
       }
     }
     Views: {
