@@ -81,9 +81,9 @@ const Footer = () => {
             © 2024 MyFinance by Finance Wise. All rights reserved.
           </div>
           <div className="flex space-x-6 text-sm">
-            <a href="#" className="text-emerald-200 hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="text-emerald-200 hover:text-white transition-colors">Terms of Service</a>
-            <a href="#" className="text-emerald-200 hover:text-white transition-colors">Cookie Policy</a>
+            <a href="/legal/privacy" className="text-emerald-200 hover:text-white transition-colors">Privacy Policy</a>
+            <a href="/legal/terms" className="text-emerald-200 hover:text-white transition-colors">Terms of Service</a>
+            <a href="/legal/cookies" className="text-emerald-200 hover:text-white transition-colors">Cookie Policy</a>
           </div>
         </div>
       </div>
