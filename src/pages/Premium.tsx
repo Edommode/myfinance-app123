@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const plans=[
  {name:"Free",price:"₦0",note:"forever",features:["Money Foundations course","Selected lesson previews","Financial calculators"]},
- {name:"Premium",price:"₦3,000",note:"30 days of access",popular:true,offer:"premium",features:["All 6 courses and 18 in-depth lessons","Quizzes and saved progress","Nigeria-focused investment curriculum","New premium modules as they launch"]},
+ {name:"Premium",price:"₦300",note:"30 days of access · payment test price",popular:true,offer:"premium",features:["All 6 courses and 18 in-depth lessons","Quizzes and saved progress","Nigeria-focused investment curriculum","New premium modules as they launch"]},
  {name:"Coaching Plus",price:"₦12,500",note:"30 days of access",offer:"coaching_plus",features:["Everything in Premium","One coaching request during access period","Personal action-plan review","Priority learning support"]}
 ];
 
